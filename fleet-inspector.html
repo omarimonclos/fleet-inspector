@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fleet Inspector - Quick Vehicle Inspection</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
+        
+        .header {
+            background: var(--card);
+            padding: 1rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        
+        .city-selector {
+            position: relative;
+        }
+        
+        .city-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .city-display:hover {
+            border-color: var(--primary);
+        }
+        
+        .city-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            max-height: 300px;
+            overflow-y: auto;
+            min-width: 180px;
+            z-index: 1000;
+        }
+        
+        .city-option {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .city-option:hover {
+            background: var(--bg);
+        }
+        
+        .city-option.selected {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        
+ 	.inspector-input {
+            margin-top: 0.75rem;
+        }
+        
+        .inspector-input input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .inspector-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        .section {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+        
+        /* Identificació */
+        .id-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .id-option {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .id-option:hover {
+            border-color: var(--primary);
+        }
+        
+        .id-option.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+        
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        /* Camera */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        #video, #canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        .camera-preview {
+            position: relative;
+        }
+        
+        .camera-preview img {
+            width: 100%;
+            border-radius: 12px;
+        }
+        
+        .camera-controls {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--primary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        /* Checklist */
+        .checklist {
+            display: grid;
+            gap: 0.75rem;
+        }
+        
+        .check-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .check-item:hover {
+            border-color: var(--primary);
+        }
+        
+        .check-item.checked {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .check-item.unchecked {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .check-label {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .check-icon {
+            font-size: 1.25rem;
+        }
+        
+        .check-status {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .status-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: all 0.2s;
+        }
+        
+        .status-btn.active-ok {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        .status-btn.active-no {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+        
+        /* Notes */
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        /* Submit */
+        .submit-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            padding: 1rem;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .submit-section .btn {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: block;
+            padding: 1rem;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* QR Scanner */
+        #qr-reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .success-message {
+            background: var(--success);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            background: var(--danger);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-top">
+            <div>
+                <h1>🏍️ Fleet Inspector</h1>
+                <p>Quick inspection from the street</p>
+            </div>
+            <div class="city-selector">
+                <div class="city-display" onclick="toggleCityDropdown()">
+                    <span>📍</span>
+                    <span id="selectedCity">Select City</span>
+                </div>
+                <div id="cityDropdown" class="city-dropdown hidden"></div>
+            </div>
+	    </div>
+        <div class="inspector-input">
+            <input 
+                type="text" 
+                id="inspectorName" 
+                placeholder="👤 Inspector name"
+                autocomplete="off"
+            >
+        </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Messages -->
+        <div id="successMessage" class="success-message hidden"></div>
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <!-- Identificació -->
+        <div class="section">
+            <div class="section-title">📋 Vehicle Identification</div>
+            
+            <div class="id-options">
+                <div class="id-option active" data-mode="manual" onclick="setIdMode('manual')">
+                    License Plate
+                </div>
+                <div class="id-option" data-mode="qr" onclick="setIdMode('qr')">
+                    QR Code
+                </div>
+            </div>
+            
+            <div id="manualInput" class="input-group">
+                <label>License Plate / ID Number</label>
+                <input type="text" id="vehicleId" placeholder="e.g. BCN1234" autocomplete="off">
+            </div>
+            
+            <div id="qrSection" class="hidden">
+                <div id="qr-reader"></div>
+                <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-light); text-align: center;">
+                    Point the camera at the vehicle's QR code
+                </div>
+            </div>
+        </div>
+
+        <!-- Foto -->
+        <div class="section">
+            <div class="section-title">📸 Vehicle Photo (Optional)</div>
+            
+            <div id="cameraSection">
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn btn-primary" onclick="capturePhoto()">📷 Take Photo</button>
+                </div>
+            </div>
+            
+            <div id="previewSection" class="hidden">
+                <div class="camera-preview">
+                    <img id="photoPreview" alt="Preview">
+                </div>
+                <div class="camera-controls">
+                    <button class="btn btn-danger btn-small" onclick="retakePhoto()">🔄 Retake Photo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist -->
+        <div class="section">
+            <div class="section-title">✅ Component Status</div>
+            <div class="checklist" id="checklist"></div>
+        </div>
+
+        <!-- Notes -->
+        <div class="section">
+            <div class="section-title">📝 Additional Notes</div>
+            <textarea id="notes" placeholder="Add any additional observations..."></textarea>
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="submit-section">
+        <button class="btn btn-primary" onclick="submitInspection()">
+            📤 Submit Inspection
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <script>
+        // Components checklist
+        const components = [
+            { id: 'mirror', label: 'Mirror', icon: '🪞' },
+            { id: 'seat', label: 'Seat', icon: '💺' },
+            { id: 'trunk', label: 'Trunk', icon: '🧳' },
+            { id: 'wheel', label: 'Wheel', icon: '⚙️' },
+            { id: 'handlebar', label: 'Handlebar', icon: '🚴' },
+            { id: 'display', label: 'Display', icon: '📱' },
+            { id: 'grips', label: 'Grips', icon: '🤝' },
+            { id: 'lights', label: 'Lights', icon: '💡' },
+            { id: 'stickers', label: 'Stickers', icon: '🏷️' },
+            { id: 'cleanliness', label: 'Cleanliness', icon: '✨' }
+        ];
+
+        // Cities list (alphabetically sorted)
+        const cities = [
+            'Amsterdam',
+            'Antwerp',
+            'Barcelona',
+            'Bruxelles',
+            'Delft',
+            'Den Hague',
+            'Eindhoven',
+            'Haarlem',
+            'Lisboa',
+            'Madrid',
+            'Milano',
+            'Paris',
+            'Roma',
+            'Rotterdam',
+            'Sevilla',
+            'Torino',
+            'València'
+        ];
+
+        // State
+        let inspectionData = {
+            city: null,
+	    inspector: '',
+            idMode: 'manual',
+            vehicleId: '',
+            photo: null,
+            components: {},
+            notes: '',
+            timestamp: null
+        };
+
+        let videoStream = null;
+        let qrScanner = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeChecklist();
+            initializeCamera();
+            initializeCitySelector();
+      	    initializeInspector();
+            
+            // Initialize all components as null (not checked yet)
+            components.forEach(comp => {
+                inspectionData.components[comp.id] = null;
+            });
+        });
+
+        // City Selector
+        function initializeCitySelector() {
+            const dropdown = document.getElementById('cityDropdown');
+            
+            // Create city options
+            cities.forEach(city => {
+                const option = document.createElement('div');
+                option.className = 'city-option';
+                option.textContent = city;
+                option.onclick = () => selectCity(city);
+                dropdown.appendChild(option);
+            });
+            
+            // Load saved city from localStorage
+            const savedCity = localStorage.getItem('selectedCity');
+            if (savedCity && cities.includes(savedCity)) {
+                selectCity(savedCity);
+            }
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.city-selector')) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        function toggleCityDropdown() {
+            const dropdown = document.getElementById('cityDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function selectCity(city) {
+            inspectionData.city = city;
+            document.getElementById('selectedCity').textContent = city;
+            
+            // Save to localStorage
+            localStorage.setItem('selectedCity', city);
+            
+            // Update UI
+            document.querySelectorAll('.city-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.textContent === city) {
+                    opt.classList.add('selected');
+                }
+            });
+            
+            // Close dropdown
+            document.getElementById('cityDropdown').classList.add('hidden');
+        }
+
+        // Inspector Name
+        function initializeInspector() {
+            const savedInspector = localStorage.getItem('inspectorName');
+            if (savedInspector) {
+                document.getElementById('inspectorName').value = savedInspector;
+                inspectionData.inspector = savedInspector;
+            }
+            
+            // Save inspector name on input
+            document.getElementById('inspectorName').addEventListener('input', (e) => {
+                const name = e.target.value.trim();
+                inspectionData.inspector = name;
+                localStorage.setItem('inspectorName', name);
+            });
+        }
+
+        // ID Mode
+        function setIdMode(mode) {
+            inspectionData.idMode = mode;
+            
+            document.querySelectorAll('.id-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            
+            if (mode === 'manual') {
+                document.getElementById('manualInput').classList.remove('hidden');
+                document.getElementById('qrSection').classList.add('hidden');
+                stopQRScanner();
+            } else {
+                document.getElementById('manualInput').classList.add('hidden');
+                document.getElementById('qrSection').classList.remove('hidden');
+                startQRScanner();
+            }
+        }
+
+        // QR Scanner
+        function startQRScanner() {
+            if (qrScanner) return;
+            
+            qrScanner = new Html5Qrcode("qr-reader");
+            
+            qrScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                (decodedText) => {
+                    inspectionData.vehicleId = decodedText;
+                    showMessage(`✅ Vehicle identified: ${decodedText}`, 'success');
+                    stopQRScanner();
+                    setIdMode('manual');
+                    document.getElementById('vehicleId').value = decodedText;
+                }
+            ).catch(err => {
+                console.error('QR Scanner error:', err);
+            });
+        }
+
+        function stopQRScanner() {
+            if (qrScanner) {
+                qrScanner.stop().catch(err => console.error(err));
+                qrScanner = null;
+            }
+        }
+
+        // Camera
+        function initializeCamera() {
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+            })
+            .then(stream => {
+                videoStream = stream;
+                document.getElementById('video').srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Camera error:', err);
+                showMessage('❌ Cannot access camera', 'error');
+            });
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0);
+            
+            inspectionData.photo = canvas.toDataURL('image/jpeg', 0.8);
+            
+            document.getElementById('photoPreview').src = inspectionData.photo;
+            document.getElementById('cameraSection').classList.add('hidden');
+            document.getElementById('previewSection').classList.remove('hidden');
+            
+            // Stop camera
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        function retakePhoto() {
+            inspectionData.photo = null;
+            document.getElementById('cameraSection').classList.remove('hidden');
+            document.getElementById('previewSection').classList.add('hidden');
+            initializeCamera();
+        }
+
+        // Checklist
+        function initializeChecklist() {
+            const container = document.getElementById('checklist');
+            
+            components.forEach(comp => {
+                const item = document.createElement('div');
+                item.className = 'check-item';
+                item.innerHTML = `
+                    <div class="check-label">
+                        <span class="check-icon">${comp.icon}</span>
+                        <span>${comp.label}</span>
+                    </div>
+                    <div class="check-status">
+                        <button class="status-btn" onclick="setComponentStatus('${comp.id}', true)">✓</button>
+                        <button class="status-btn" onclick="setComponentStatus('${comp.id}', false)">✗</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function setComponentStatus(componentId, status) {
+            inspectionData.components[componentId] = status;
+            updateChecklistUI();
+        }
+
+        function updateChecklistUI() {
+            const items = document.querySelectorAll('.check-item');
+            
+            items.forEach((item, index) => {
+                const comp = components[index];
+                const status = inspectionData.components[comp.id];
+                const buttons = item.querySelectorAll('.status-btn');
+                
+                item.classList.remove('checked', 'unchecked');
+                buttons.forEach(btn => btn.classList.remove('active-ok', 'active-no'));
+                
+                if (status === true) {
+                    item.classList.add('checked');
+                    buttons[0].classList.add('active-ok');
+                } else if (status === false) {
+                    item.classList.add('unchecked');
+                    buttons[1].classList.add('active-no');
+                }
+            });
+        }
+
+        // Submit
+        async function submitInspection() {
+            // Validate city
+            if (!inspectionData.city) {
+                showMessage('❌ Please select a city', 'error');
+                return;
+            }
+            
+           // Validate inspector
+            if (!inspectionData.inspector) {
+                showMessage('❌ Please enter inspector name', 'error');
+                return;
+            }
+            
+            // Validate vehicle ID
+            const vehicleId = document.getElementById('vehicleId').value.trim();
+            if (!vehicleId) {
+                showMessage('❌ Please enter the vehicle license plate', 'error');
+                return;
+            }
+            
+            // Check if all components are checked
+            const uncheckedComponents = components.filter(comp => 
+                inspectionData.components[comp.id] === null
+            );
+            
+            if (uncheckedComponents.length > 0) {
+                showMessage('⚠️ There are still unchecked components', 'error');
+                return;
+            }
+            
+            // Check if photo is missing and confirm
+            if (!inspectionData.photo) {
+                const confirmed = confirm('Are you sure you want to send this report without the picture of the vehicle?');
+                if (!confirmed) {
+                    return;
+                }
+            }
+            
+            // Prepare data
+            inspectionData.vehicleId = vehicleId;
+            inspectionData.notes = document.getElementById('notes').value.trim();
+            inspectionData.timestamp = new Date().toISOString();
+            
+            // Show loading
+            document.getElementById('loading').classList.remove('hidden');
+            
+            try {
+                // Send to Google Sheets
+                await sendToGoogleSheets(inspectionData);
+                
+                showMessage('✅ Inspection submitted successfully!', 'success');
+                
+                // Reset form after 2 seconds
+                setTimeout(() => {
+                    resetForm();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Submit error:', error);
+                showMessage('❌ Error sending. Please try again.', 'error');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+
+        async function sendToGoogleSheets(data) {
+            // Google Apps Script Web App URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrevrvtd8wrZkJY8E-OJUQQfzuQpkWWryBM4lvG9bwd7s3RgSWQCFZZgrx_OyZekhqzg/exec';
+            
+            // Prepare data for Google Sheets
+            const formData = {
+                timestamp: data.timestamp,
+                city: data.city,
+		inspector: data.inspector,
+                vehicleId: data.vehicleId,
+                idMode: data.idMode,
+                photo: data.photo || '',
+                mirror: data.components.mirror,
+                seat: data.components.seat,
+                trunk: data.components.trunk,
+                wheel: data.components.wheel,
+                handlebar: data.components.handlebar,
+                display: data.components.display,
+                grips: data.components.grips,
+                lights: data.components.lights,
+                stickers: data.components.stickers,
+                cleanliness: data.components.cleanliness,
+                notes: data.notes
+            };
+            
+            // For now, just log to console and save to localStorage
+            console.log('Inspection data:', formData);
+            
+            // Save to localStorage as backup
+            const inspections = JSON.parse(localStorage.getItem('inspections') || '[]');
+            inspections.push(formData);
+            localStorage.setItem('inspections', JSON.stringify(inspections));
+            
+            // Uncomment this when you have your Google Apps Script URL:
+            
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            /*
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+	    */
+        }
+
+        function resetForm() {
+            // Reset all fields except city
+            document.getElementById('vehicleId').value = '';
+            document.getElementById('notes').value = '';
+            
+            // Reset components
+            components.forEach(comp => {
+                inspectionData.components[comp.id] = null;
+            });
+            updateChecklistUI();
+            
+            // Reset photo
+            retakePhoto();
+            
+            // Reset ID mode
+            setIdMode('manual');
+            
+            // Keep city selection from localStorage
+            const savedCity = localStorage.getItem('selectedCity');
+            if (savedCity) {
+                inspectionData.city = savedCity;
+            }
+        }
+
+        function showMessage(text, type) {
+            const successEl = document.getElementById('successMessage');
+            const errorEl = document.getElementById('errorMessage');
+            
+            if (type === 'success') {
+                successEl.textContent = text;
+                successEl.classList.remove('hidden');
+                errorEl.classList.add('hidden');
+                
+                setTimeout(() => {
+                    successEl.classList.add('hidden');
+                }, 3000);
+            } else {
+                errorEl.textContent = text;
+                errorEl.classList.remove('hidden');
+                successEl.classList.add('hidden');
+                
+                setTimeout(() => {
+                    errorEl.classList.add('hidden');
+                }, 3000);
+            }
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Save vehicle ID on input change
+        document.getElementById('vehicleId').addEventListener('input', (e) => {
+            inspectionData.vehicleId = e.target.value.trim();
+        });
+    </script>
+</body>
+</html>
