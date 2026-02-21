@@ -582,9 +582,9 @@
     <script>
         // Components checklist
         const components = [
-            { id: 'mirror', label: 'Mirror', icon: '🪞' },
+            { id: 'mirror', label: 'Mirrors', icon: '🪞' },
             { id: 'seat', label: 'Seat', icon: '💺' },
-            { id: 'trunk', label: 'Trunk', icon: '🧳' },
+            { id: 'topcase', label: 'Topcase', icon: '🧳' },
             { id: 'wheel', label: 'Wheel', icon: '⚙️' },
             { id: 'handlebar', label: 'Handlebar', icon: '🚴' },
             { id: 'display', label: 'Display', icon: '📱' },
@@ -592,6 +592,8 @@
             { id: 'lights', label: 'Lights', icon: '💡' },
             { id: 'stickers', label: 'Stickers', icon: '🏷️' },
             { id: 'cleanliness', label: 'Cleanliness', icon: '✨' }
+			{ id: 'helmets', label: 'Helmets', icon: '🪖' },
+            { id: 'hygiene', label: 'Hygiene Consumables', icon: '🧴' }
         ];
 
         // Cities list (alphabetically sorted)
@@ -916,19 +918,19 @@
 
         async function sendToGoogleSheets(data) {
             // Google Apps Script Web App URL
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrevrvtd8wrZkJY8E-OJUQQfzuQpkWWryBM4lvG9bwd7s3RgSWQCFZZgrx_OyZekhqzg/exec';
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEdK7Lsxxrc7Dl1fqBfhBu2Z2RebOzljMIOvaWjuKm7wq02Ox930UHFLqhPJ1Yke51-w/exec';
             
             // Prepare data for Google Sheets
             const formData = {
                 timestamp: data.timestamp,
                 city: data.city,
-		inspector: data.inspector,
+				inspector: data.inspector,
                 vehicleId: data.vehicleId,
                 idMode: data.idMode,
                 photo: data.photo || '',
                 mirror: data.components.mirror,
                 seat: data.components.seat,
-                trunk: data.components.trunk,
+                topcase: data.components.topcase,
                 wheel: data.components.wheel,
                 handlebar: data.components.handlebar,
                 display: data.components.display,
@@ -936,7 +938,9 @@
                 lights: data.components.lights,
                 stickers: data.components.stickers,
                 cleanliness: data.components.cleanliness,
-                notes: data.notes
+				helmetes: data.components.helmets,
+				hygiene: data.components.hygiene,
+      			notes: data.notes
             };
             
             // For now, just log to console and save to localStorage
